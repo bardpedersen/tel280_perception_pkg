@@ -255,6 +255,23 @@ class SimpleNavHelpers():
         p = listener.transformPoint(target_frame, laser_point)
         return p.point
 
+    # Accepts a list of points, transfroms them from source to target and returns a list of transfromed points
+    def transform_points(self, points, source_frame="base_link", target_frame="odom"):
+        t_points = []
+        listener = tf.TransformListener()
+        listener.waitForTransform(
+            source_frame, target_frame,  Time(0),  Duration(4.0))
+        laser_point = PointStamped()
+        laser_point.header.frame_id = source_frame
+        laser_point.header.stamp = Time(0)
+        for point in points:
+            laser_point.point.x = point[0]
+            laser_point.point.y = point[1]
+            laser_point.point.z = point[2]
+            p = listener.transformPoint(target_frame, laser_point)
+            t_points.append([p.point.x, p.point.y, p.point.z])
+        return t_points
+
 
 class PurePursuitController():
     def __init__(self, linear_k, angular_k, linear_max, angular_max):
