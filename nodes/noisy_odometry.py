@@ -11,8 +11,8 @@ class Perception:
     def __init__(self):
         self.source_topic = "odom"
         self.published_topic = "odom_noisy"
-        self.position_noise = 0.04
-        self.velocity_noise = 0.04
+        self.position_noise = 0.08
+        self.velocity_noise = 0.08
         self.percepted_odom = Odometry()
         rospy.Subscriber(self.source_topic, Odometry, self.source_callback)
         self.pub = rospy.Publisher(
