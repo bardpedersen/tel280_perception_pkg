@@ -10,7 +10,7 @@ import math
 
 
 class SensorFuserNode():
-    
+
     def __init__(self):
 
         # Use ApproximateTimeSynchronizer to get synced sensor data
@@ -77,6 +77,68 @@ class SensorFuserNode():
             points=points,
             source_frame=laser.header.frame_id,
             target_frame=image.header.frame_id)
+
+        # Now we have points in 3D camera frame, lets project them to Image plane with following
+
+        # x = P * X, where;
+        #   x = [u v w]' 2D image point,
+        #   P = Projection/camera matrix
+        #       [fx'  0  cx' Tx]
+        #   P = [ 0  fy' cy' Ty]
+        #       [ 0   0   1   0]
+        #   X = [X Y Z 1] 3D point in camera frame
+
+        # Given a 3D point [X Y Z]', the projection (x, y) of the point onto the rectified image is given by:
+        #  [u v w]' = P * [X Y Z 1]'
+        #   x = u / w
+        #   y = v / w
+
+        # In order to match the convention, we need to append points with 1, so that we have X = [X Y Z 1]
+        points_in_cam_frame = np.array(points_in_cam_frame)  # to numpy array
+
+        # Make points_in_cam_frame has to have shape [X Y Z 1]
+        ones = np.ones((len(points_in_cam_frame), 1), dtype=np.float32)
+        points_in_cam_frame = np.append(points_in_cam_frame, ones, axis=1)
+
+        # recive P, Projection matrix from CameraInfo
+        P = camerainfo.P
+        P = np.reshape(camerainfo.P, (3, 4))
+
+        points_in_image = []
+        for p in points_in_cam_frame:
+            # Apply x = P * X
+            p_in_image_plane = np.dot(P, p)
+            u = p_in_image_plane[0]
+            v = p_in_image_plane[1]
+            w = p_in_image_plane[2]
+            # Recall
+            #  [u v w]' = P * [X Y Z 1]'
+            #         x = u / w
+            #         y = v / w
+            x = u / w
+            y = v / w
+            points_in_image.append([x, y])
+
+        # Draw these points to image plane
+        idx = 0
+        for p in points_in_image:
+            try:
+                # Draw a circle to represent this point
+                # The color indicates ranges of the point
+                cv2.circle(cv_image, (int(p[0]), int(p[1])), 3, 
+                           int(50*ranges[idx]), thickness=3)
+            except:
+                pass
+                #print("Cant project this point")
+            idx += 1
+
+        # Finally publish point projected image
+        # We have achived on how one can represent Laser data in a camera image
+        try:
+            self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+        except CvBridgeError as e:
+            print(e)
+
 
 def main():
 
