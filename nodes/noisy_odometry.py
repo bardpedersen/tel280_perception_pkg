@@ -9,6 +9,7 @@ from nav_msgs.msg import Odometry
 class Perception:
 
     def __init__(self):
+        def __init__(self):
         self.source_topic = "odom"
         self.published_topic = "odom_noisy"
         self.position_noise = 0.08
