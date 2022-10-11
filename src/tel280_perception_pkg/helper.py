@@ -1,4 +1,3 @@
-
 import struct
 import math
 from transforms3d.euler import quat2euler
@@ -21,9 +20,6 @@ import random
 import math
 
 sys.dont_write_bytecode = True
-
-# Refer to for equations https://medium.com/@ajithraj_gangadharan/3d-ransac-algorithm-for-lidar-pcd-segmentation-315d2a51351
-
 
 class RANSAC:
     """

@@ -1,16 +1,7 @@
 #!/usr/bin/env python3
-import rospy
+
 import math
-import numpy as np
-from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import OccupancyGrid
-from tel280_perception_pkg.helper import SimpleNavHelpers
-from nav_msgs.msg import Path
-
-# Adapted from https://github.com/AtsushiSakai/PythonRobotics/blob/master/PathPlanning/AStar/a_star.py
-
-
-
 
 class AStarPlanner:
 
@@ -22,7 +13,6 @@ class AStarPlanner:
         """
         self.occupancy_grid = OccupancyGrid()
         self.occupancy_grid = occupancy_grid
-        rospy.loginfo(str(self.occupancy_grid.info))
         self.rr = rr
         self.min_x, self.min_y = 0, 0
         self.max_x, self.max_y = 0, 0
@@ -180,11 +170,8 @@ class AStarPlanner:
         return True
 
     def calc_obstacle_map(self):
-
         ox = []
         oy = []
-
-        print(str(self.occupancy_grid.info))
 
         # obstacle map generation
         self.obstacle_map = [[False for _ in range(self.occupancy_grid.info.height)]
@@ -226,56 +213,3 @@ class AStarPlanner:
                   [1, 1, math.sqrt(2)]]
 
         return motion
-
-
-class Perception:
-
-    def __init__(self):
-        self.source_topic = "/map"
-        self.goal_topic = "/move_base_simple/goal"
-        self.map_recieved = False
-        self.map = OccupancyGrid()
-        rospy.Subscriber(self.source_topic, OccupancyGrid,self.source_callback)
-        rospy.Subscriber(self.goal_topic, PoseStamped,self.goal_callback)
-        self.path_publisher = rospy.Publisher("plan", Path, queue_size=1)
-        self.nav_helper = SimpleNavHelpers()
-
-    def source_callback(self, map: OccupancyGrid):
-        if not self.map_recieved:
-            self.map = map
-            self.map_recieved = True
-            rospy.loginfo("Recieved A map With following properties")
-            # rospy.loginfo(str(self.map.info))
-
-    def goal_callback(self, goal_pose: PoseStamped):
-        rospy.loginfo("Recieved A Goal")
-
-        # get robot pose in map frame
-        robot_pose = self.nav_helper.get_curr_robot_pose(frame="map")
-        sx = robot_pose.pose.position.x
-        sy = robot_pose.pose.position.y
-        gx = goal_pose.pose.position.x
-        gy = goal_pose.pose.position.y
-        a_star = AStarPlanner(self.map, rr=0.3)
-        rx, ry = a_star.planning(sx, sy, gx, gy)
-        
-        path = Path()
-        path.header.frame_id = "map"
-        path.header.stamp = rospy.Time.now()   
-        
-        for xx, yy in zip(rx, ry):
-            pose = PoseStamped()
-            pose.pose.position.x = xx + self.map.info.origin.position.x
-            pose.pose.position.y = yy  + self.map.info.origin.position.y
-            pose.pose.orientation.w = 1.0
-            path.poses.append(pose)
-        self.path_publisher.publish(path)
- 
-
-if __name__ == '__main__':
-    rospy.init_node("Perception")
-    try:
-        node = Perception()
-        rospy.spin()
-    except rospy.ROSInterruptException:
-        pass

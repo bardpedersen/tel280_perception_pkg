@@ -27,7 +27,7 @@ catkin_install_python(PROGRAMS
                     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
                     )                    
 catkin_install_python(PROGRAMS
-                    nodes/astar.py
+                    nodes/path_planner.py
                     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
                     )     
 
