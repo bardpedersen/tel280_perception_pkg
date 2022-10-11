@@ -13,7 +13,16 @@ pip3 install open3d
 pip3 install transforms3d
 export TURTLEBOT3_MODEL=waffle
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/home/$USER/catkin_ws/src/tel280_perception_pkg/models
+
+sudo apt install ros-noetic-slam-toolbox*
+rosservice call /slam_toolbox/save_map "name:                             
+  data: '/home/$USER/map.pgm'"
+roslaunch tel280_perception_pkg slam.launch
+roslaunch turtlebot3_teleop turtlebot3_teleop_key.launch
+
 ```
+
+For slam localization, drive the robot around a litlle, set the initial pose, then deserialize the map. 
 
 You can launch the person following node with; 
 

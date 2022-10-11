@@ -225,13 +225,13 @@ class SimpleNavHelpers():
                          (a.position.y - b.position.y) ** 2 +
                          (a.position.z - b.position.z) ** 2)
 
-    def get_curr_robot_pose(self):
+    def get_curr_robot_pose(self, frame="odom"):
         curr_robot_pose = PoseStamped()
-        curr_robot_pose.header.frame_id = "odom"
+        curr_robot_pose.header.frame_id = frame
         curr_robot_pose.header.stamp = rospy.Time.now()
         try:
             transform = self.tf_buffer.lookup_transform(
-                "odom", "base_link", rospy.Time.now(), rospy.Duration(2.0))
+                frame, "base_link", rospy.Time.now(), rospy.Duration(2.0))
             curr_robot_pose.pose.position.x = transform.transform.translation.x
             curr_robot_pose.pose.position.y = transform.transform.translation.y
             curr_robot_pose.pose.position.z = transform.transform.translation.z
