@@ -6,23 +6,23 @@ import numpy as np
 from nav_msgs.msg import Odometry
 
 
-class Perception:
+class NoisyOdom:
 
     def __init__(self):
         def __init__(self):
-        self.source_topic = "odom"
-        self.published_topic = "odom_noisy"
-        self.position_noise = 0.08
-        self.velocity_noise = 0.08
-        self.percepted_odom = Odometry()
-        rospy.Subscriber(self.source_topic, Odometry, self.source_callback)
-        self.pub = rospy.Publisher(
-            self.published_topic, Odometry, queue_size=10)
-        
-        rate = rospy.Rate(1)
-        while not rospy.is_shutdown():
-            self.pub.publish(self.percepted_odom)
-            rate.sleep()
+            self.source_topic = "odom"
+            self.published_topic = "odom_noisy"
+            self.position_noise = 0.08
+            self.velocity_noise = 0.08
+            self.percepted_odom = Odometry()
+            rospy.Subscriber(self.source_topic, Odometry, self.source_callback)
+            self.pub = rospy.Publisher(
+                self.published_topic, Odometry, queue_size=10)
+            
+            rate = rospy.Rate(1)
+            while not rospy.is_shutdown():
+                self.pub.publish(self.percepted_odom)
+                rate.sleep()
             
 
     def source_callback(self, odom):
@@ -40,8 +40,8 @@ class Perception:
 
 
 if __name__ == '__main__':
-    rospy.init_node("Perception")
+    rospy.init_node("NoisyOdom")
     try:
-        node = Perception()
+        node = NoisyOdom()
     except rospy.ROSInterruptException:
         pass
