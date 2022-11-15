@@ -2,7 +2,7 @@
 
 import rospy
 import math
-from geometry_msgs.msg import Pose, PoseWithCovarianceStamped
+from geometry_msgs.msg import Pose, PoseWithCovarianceStamped, PoseArray
 
 # Create A action client to move_base action server
 from move_base_msgs.msg import MoveBaseAction
@@ -46,130 +46,68 @@ class RowFollower:
         rospy.loginfo(" Recieved cancel req.")
         self.stop = msg
         
+    def deep_copy_pose(self, pose):
+        dp = Pose()
+        dp.position.x = pose.position.x
+        dp.position.y = pose.position.y
+        dp.orientation.x = pose.orientation.x
+        dp.orientation.y = pose.orientation.y
+        dp.orientation.z = pose.orientation.z
+        dp.orientation.w = pose.orientation.w   
+        return dp
+             
     def initialpose_callback(self, initial_pose: PoseWithCovarianceStamped):
  
-        self.waypoints = []
+        waypoints = []
         marker_array = MarkerArray()
+        
         marker_id = 0
         
         if self.begin_from_left_row == False:
             self.row_seperation_dist = -self.row_seperation_dist
-
+        
+        waypoints.append(self.deep_copy_pose(initial_pose.pose.pose))
+        
         for i in range(0, self.num_rows):
+            
+            latest_waypoint = self.deep_copy_pose(waypoints[-1])
 
-            if i == 0:
-                curr_waypoint = initial_pose.pose
-                curr_robot_pose = initial_pose.pose
-                robot_quat_exp = [curr_robot_pose.pose.orientation.w, curr_robot_pose.pose.orientation.x,
-                                  curr_robot_pose.pose.orientation.y, curr_robot_pose.pose.orientation.z]
-                robot_euler = quat2euler(robot_quat_exp)
+            latest_quat = [latest_waypoint.orientation.w, latest_waypoint.orientation.x,
+                            latest_waypoint.orientation.y, latest_waypoint.orientation.z]
+            latest_euler = quat2euler(latest_quat)
+            
+            heading_to_row = 1.57
+            if(i % 2 == 1):
+                heading_to_row = -1.57
+            
+            latest_waypoint.position.x += math.cos(latest_euler[2]) * self.row_length
+            latest_waypoint.position.y += math.sin(latest_euler[2]) * self.row_length
+            latest_waypoint.orientation = Quaternion(*quaternion_from_euler(0, 0, latest_euler[2]))
+            waypoints.append(self.deep_copy_pose(latest_waypoint))
 
-                curr_waypoint.pose.position.x += math.cos(
-                    robot_euler[2]) * self.row_length
-                curr_waypoint.pose.position.y += math.sin(
-                    robot_euler[2]) * self.row_length
-                curr_waypoint.pose.orientation = Quaternion(
-                    *quaternion_from_euler(0, 0, robot_euler[2]))
-                self.waypoints.append(curr_waypoint)
+            marker = self.get_marker()
+            marker.pose = latest_waypoint
+            marker.id = marker_id
+            marker_id += 1
+            marker_array.markers.append(marker)
 
-                marker = self.get_marker()
+            latest_waypoint = self.deep_copy_pose(waypoints[-1])
+            latest_waypoint.position.x += math.cos(latest_euler[2] + heading_to_row) * self.row_seperation_dist
+            latest_waypoint.position.y += math.sin(latest_euler[2] + heading_to_row) * self.row_seperation_dist
+            latest_waypoint.orientation = Quaternion(*quaternion_from_euler(0, 0, -latest_euler[2]))
+            waypoints.append(self.deep_copy_pose(latest_waypoint))
 
-                marker_pose = Pose()
-                marker_pose.position.x = curr_waypoint.pose.position.x
-                marker_pose.position.y = curr_waypoint.pose.position.y
-                marker_pose.orientation.x = curr_waypoint.pose.orientation.x
-                marker_pose.orientation.y = curr_waypoint.pose.orientation.y
-                marker_pose.orientation.z = curr_waypoint.pose.orientation.z
-                marker_pose.orientation.w = curr_waypoint.pose.orientation.w
-
-                marker.pose = marker_pose
-                marker.id = marker_id
-                marker_id += 1
-                marker_array.markers.append(marker)
-
-                curr_waypoint.pose.position.x += math.cos(
-                    robot_euler[2] + 1.57) * self.row_seperation_dist
-                curr_waypoint.pose.position.y += math.sin(
-                    robot_euler[2] + 1.57) * self.row_seperation_dist
-                curr_waypoint.pose.orientation = Quaternion(
-                    *quaternion_from_euler(0, 0, -robot_euler[2]))
-                self.waypoints.append(curr_waypoint)
-
-                marker = self.get_marker()
-
-                marker_pose = Pose()
-                marker_pose.position.x = curr_waypoint.pose.position.x
-                marker_pose.position.y = curr_waypoint.pose.position.y
-                marker_pose.orientation.x = curr_waypoint.pose.orientation.x
-                marker_pose.orientation.y = curr_waypoint.pose.orientation.y
-                marker_pose.orientation.z = curr_waypoint.pose.orientation.z
-                marker_pose.orientation.w = curr_waypoint.pose.orientation.w
-                
-                marker.pose = marker_pose
-                marker.id = marker_id
-                marker_id += 1
-                marker_array.markers.append(marker)
-
-            else:
-                ang = 1.57
-                if(i % 2 == 1):
-                    ang = -1.57
-                curr_waypoint = self.waypoints[-1]
-
-                robot_quat_exp = [curr_waypoint.pose.orientation.w, curr_waypoint.pose.orientation.x,
-                                  curr_waypoint.pose.orientation.y, curr_waypoint.pose.orientation.z]
-                robot_euler = quat2euler(robot_quat_exp)
-
-                curr_waypoint.pose.position.x += math.cos(
-                    robot_euler[2]) * self.row_length
-                curr_waypoint.pose.position.y += math.sin(
-                    robot_euler[2]) * self.row_length
-                curr_waypoint.pose.orientation = Quaternion(
-                    *quaternion_from_euler(0, 0, robot_euler[2]))
-                self.waypoints.append(curr_waypoint)
-
-                marker = self.get_marker()
-
-                marker_pose = Pose()
-                marker_pose.position.x = curr_waypoint.pose.position.x
-                marker_pose.position.y = curr_waypoint.pose.position.y
-                marker_pose.orientation.x = curr_waypoint.pose.orientation.x
-                marker_pose.orientation.y = curr_waypoint.pose.orientation.y
-                marker_pose.orientation.z = curr_waypoint.pose.orientation.z
-                marker_pose.orientation.w = curr_waypoint.pose.orientation.w
-                
-                marker.pose = marker_pose
-                marker.id = marker_id
-                marker_id += 1
-                marker_array.markers.append(marker)
-
-                curr_waypoint.pose.position.x += math.cos(
-                    robot_euler[2] + ang) * self.row_seperation_dist
-                curr_waypoint.pose.position.y += math.sin(
-                    robot_euler[2] + ang) * self.row_seperation_dist
-                curr_waypoint.pose.orientation = Quaternion(
-                    *quaternion_from_euler(0, 0, -robot_euler[2]))
-                self.waypoints.append(curr_waypoint)
-
-                marker = self.get_marker()
-                
-                marker_pose = Pose()
-                marker_pose.position.x = curr_waypoint.pose.position.x
-                marker_pose.position.y = curr_waypoint.pose.position.y
-                marker_pose.orientation.x = curr_waypoint.pose.orientation.x
-                marker_pose.orientation.y = curr_waypoint.pose.orientation.y
-                marker_pose.orientation.z = curr_waypoint.pose.orientation.z
-                marker_pose.orientation.w = curr_waypoint.pose.orientation.w
-                
-                marker.pose = marker_pose
-                marker.id = marker_id
-                marker_id += 1
-                marker_array.markers.append(marker)
-
-        rospy.loginfo("We have Waypoints %d", len(self.waypoints))
+            marker = self.get_marker()
+            marker.pose = latest_waypoint
+            marker.id = marker_id
+            marker_id += 1
+            marker_array.markers.append(marker)
+            
+        rospy.loginfo("We have Waypoints %d", len(waypoints))
+        print(waypoints)
 
         self.waypoints_publisher.publish(marker_array)
-        self.waypoints.clear()
+
         self.start_waypoint_following(marker_array)
 
     def get_marker(self):
