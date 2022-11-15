@@ -1,0 +1,7 @@
+<launch>
+
+    <node pkg="tel280_perception_pkg" type="row_follower.py" name="row_follower" output="screen">
+        <rosparam command="load" file="$(find tel280_perception_pkg)/config/row_follower_params.yaml" />
+    </node>
+
+</launch>

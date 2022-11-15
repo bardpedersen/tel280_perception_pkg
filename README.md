@@ -30,5 +30,9 @@ You can launch the person following node with;
 roslaunch tel280_perception_pkg person_follow.launch 
 ```
 
+```bash
+rostopic pub -1 /stop std_msgs/Bool "data: true"
+```
+
 
 ![Turtlebot3 following a person](assets/output.gif)

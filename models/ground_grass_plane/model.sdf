@@ -13,12 +13,15 @@
         <surface>
           <friction>
             <ode>
-              <mu>100</mu>
-              <mu2>50</mu2>
+              <mu>100000</mu>
+              <mu2>100000</mu2>
+              <kp>1000000.0</kp>
+              <kd>100.0</kd>
+              <max_vel>1.0</max_vel>
             </ode>
           </friction>
         </surface>
-      </collision>
+      </collision>9
 
       <visual name='visual_0'>
         <pose>0 0 0 0 0 0</pose>

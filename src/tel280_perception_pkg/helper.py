@@ -227,7 +227,7 @@ class SimpleNavHelpers():
         curr_robot_pose.header.stamp = rospy.Time.now()
         try:
             transform = self.tf_buffer.lookup_transform(
-                frame, "base_link", rospy.Time.now(), rospy.Duration(2.0))
+                frame, "base_link", rospy.Time(0), rospy.Duration(secs=2.0))
             curr_robot_pose.pose.position.x = transform.transform.translation.x
             curr_robot_pose.pose.position.y = transform.transform.translation.y
             curr_robot_pose.pose.position.z = transform.transform.translation.z

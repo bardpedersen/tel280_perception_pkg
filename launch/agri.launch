@@ -1,7 +1,7 @@
 <launch>
   <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
-  <arg name="x_pos" default="-0.0"/>
-  <arg name="y_pos" default="-4.0"/>
+  <arg name="x_pos" default="1.9"/>
+  <arg name="y_pos" default="-2.9"/>
   <arg name="z_pos" default="0.0"/>
   <arg name="multi_robot_name" default=""/>
 
@@ -30,23 +30,37 @@
   <!-- Map server -->
   <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
 
-  <!-- AMCL -->
+  <!-- AMCL --> 
   <!--
     <include file="$(find turtlebot3_navigation)/launch/amcl.launch"/>
   -->
-  <node pkg="tf" type="static_transform_publisher" name="camera_link" args="-15 -15 0 0 0 0  odom map 100"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="camera_link" args="-3 -3 0 0 0 0  odom map 100"/>
 
 
   <!-- move_base -->
-  <include file="$(find turtlebot3_navigation)/launch/move_base.launch">
-    <arg name="model" value="$(arg model)" />
-    <arg name="move_forward_only" value="$(arg move_forward_only)"/>
-  </include>
-
+  <arg name="cmd_vel_topic" default="/cmd_vel" />
+  <arg name="odom_topic" default="odom" />
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+    <rosparam file="$(find tel280_perception_pkg)/config/costmap_common_params_$(arg model).yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find tel280_perception_pkg)/config/costmap_common_params_$(arg model).yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find tel280_perception_pkg)/config/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find tel280_perception_pkg)/config/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find tel280_perception_pkg)/config/move_base_params.yaml" command="load" />
+    <rosparam file="$(find tel280_perception_pkg)/config/dwa_local_planner_params_$(arg model).yaml" command="load" />
+    <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
+    <remap from="odom" to="$(arg odom_topic)"/>
+    <param name="DWAPlannerROS/min_vel_x" value="0.0" if="$(arg move_forward_only)" />
+  </node>
 
   <!-- rviz -->
   <group if="$(arg open_rviz)">
-    <node pkg="rviz" type="rviz" name="rviz" required="true" args="-d $(find turtlebot3_navigation)/rviz/turtlebot3_navigation.rviz"/>
+    <node pkg="rviz" type="rviz" name="rviz" required="true" args="-d $(find tel280_perception_pkg)/rviz/nav.rviz"/>
   </group>
+
+  <node pkg="tel280_perception_pkg" type="row_follower.py" name="row_follower" output="screen">
+    <rosparam command="load" file="$(find tel280_perception_pkg)/config/row_follower_params.yaml" />
+  </node>
 
 </launch>
