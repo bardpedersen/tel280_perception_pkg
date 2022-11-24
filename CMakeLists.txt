@@ -34,6 +34,11 @@ catkin_install_python(PROGRAMS
                     nodes/row_follower.py
                     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
                     )    
+catkin_install_python(PROGRAMS
+                    nodes/laser_correction_node.py
+                    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+                    )  
+                    
 install(DIRECTORY launch worlds urdf models rviz config
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

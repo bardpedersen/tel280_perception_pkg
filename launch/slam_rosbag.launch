@@ -1,0 +1,23 @@
+<launch>
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find tel280_perception_pkg)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="/use_sim_time" value="true" />
+  </node>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find tel280_perception_pkg)/rviz/slam.rviz">
+    <param name="/use_sim_time" value="true" />
+  </node>>
+
+  <node pkg="slam_toolbox" type="async_slam_toolbox_node" name="slam_toolbox" output="screen" >
+    <rosparam command="load" file="$(find tel280_perception_pkg)/config/mapper_params_online_async.yaml" />
+    <param name="/use_sim_time" value="true" />
+  </node>
+
+  <node pkg="tel280_perception_pkg" type="laser_correction_node.py" name="row_follower" output="screen">
+  </node>
+
+</launch>
